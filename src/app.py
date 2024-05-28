@@ -46,7 +46,6 @@ def get_question_data():
         #_, reps = model.encoder(input_tensor)
         label = classifier.predict(reps)
         label = label[0]
-        print(label)
         #render the results page
         if label == 0:
             return render_template('tclustae_results/mps.html') # page with the MPs description
@@ -59,13 +58,11 @@ def get_question_data():
         else:
             return f'ERROR: Selected model {model}' # error
     else:
-        print('ola1')
         return render_template('static_data.html') # page to add the static info  
     
 @app.route('/get_static_data', methods=['POST'])
 def get_static_data():
     #get data
-    print('ola2')
     static_data = request.form
     static_data = [static_data['DiagnosticDelay'], static_data['Age_onset'], static_data['Onset'],static_data['Gender'], static_data['BMI'],
                    static_data['C9orf72'],static_data['UMNvsLMN']]
@@ -89,7 +86,6 @@ def get_static_data():
     classifier = joblib.load('temp_static_nearest_centroids_original.joblib')
     label = classifier.predict(reps)
 
-    print(label)
     #render the results page
     if label == 0:
         return render_template('stclustae_results/sp.html') # page with the MPs description
@@ -138,7 +134,6 @@ def normalize(input, model, static_data = []):
         input = np.array(input)
         input = scaler.transform(input.reshape(1,-1))
         input = input.reshape(3, 7).tolist()
-        print(input)
         
         return input
     if model == 'STClustAE':
