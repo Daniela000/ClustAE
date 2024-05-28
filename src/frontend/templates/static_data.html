@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClustAE - Stratifying ALS Patients</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shorthandcss@1.1.1/dist/shorthand.min.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Muli:200,300,400,500,600,700,800,900&display=swap" />
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.css" />
+    <!-- <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" /> -->
+
+    <link rel="shortcut icon" href="">
+    
+    <style> 
+        body { text-align: center;}
+        input { 
+            border: none; 
+            outline: none; 
+            padding: 5px; 
+            border-bottom: 5px solid grey; 
+        } 
+        
+        </style>
+</head>
+
+<body class="bg-black muli"> 
+    <form method = 'POST' action = "/get_static_data" id = 'form_static'>
+    <div class = "after w-100pc"><br>
+        <h3 class= "white" class="white">Static Data</h3><br>
+        <div class ="float-left w-33pc">
+        <label class = "white"for="input_dd">Diagnostic Delay</label><br>
+        <input type="text" id="DiagnosticDelay" name="DiagnosticDelay" required><br>
+        <br>
+        </div>
+
+        <div class ="float-left w-33pc">
+        <label class = "white"for="input_bmi">BMI (Body Mass Index) </label><br>
+        <input type="text" id="bmi" name="BMI" required><br>
+        <br>
+        </div>
+
+        <div class ="float-left w-33pc">
+        <label class = "white"for="input_age">Age at onset </label><br>
+        <input type="text" id="age" name="Age_onset" required><br>
+        <br>
+        </div>
+    </div>  
+        <div class ="float-left  w-100pc">
+        <h4 class = 'white'> Gender: </h4> 
+        <label class = 'white' for="male">Male</label>
+        <input class = "white" type="radio" id="male" name="Gender" value = 2><br>
+        <label class = 'white' for="female">Female</label>
+        <input class = "white" type="radio" id="female" name="Gender" value = 1><br>  <br>
+        </div>
+        <br>
+
+        <div class ="float-left w-100pc">
+        <h4 class = 'white'> Onset Form: </h4>
+        <label class = "white" >Bulbar</label>
+        <input class = "white" type="radio" id="bulbar" name="Onset" value = 1><br>
+        <label class = "white" >Limbs</label>
+        <input class = "white" type="radio" id="limb" name="Onset" value = 2><br>
+        <label class = "white" >Axial/Respiratory</label>
+        <input class = "white" type="radio" id="axial/resp" name="Onset" value = 3 ><br>
+        <label class = "white" >Generalized</label>
+        <input class = "white" type="radio" id="gen" name="Onset" value = 4><br><br>
+        </div>
+        <br>
+
+        <div class ="float-left w-100pc">
+        <h4 class = 'white'> UMN vs LMN involvement: </h4>
+        <label class = "white" >UMN</label>
+        <input class = "white" type="radio" id="umn" name="UMNvsLMN" value = 2><br>
+        <label class = "white" >LMN</label>
+        <input class = "white" type="radio" id="lmn" name="UMNvsLMN" value = 1><br>
+        <label class = "white" >both</label>
+        <input class = "white" type="radio" id="both" name="UMNvsLMN" value = 3><br><br>
+        </div>
+        <br>
+
+        <div class ="float-left w-100pc">
+        <h4 class = 'white'> C90rf72 expansion: </h4>
+        <label class = "white" >Yes</label>
+        <input class = "white" type="radio" id="yes" name="C9orf72" value = 2><br>
+        <label class = "white" >No</label>
+        <input class = "white" type="radio" id="no" name="C9orf72" value = 1><br>
+        </div>
+        <br>
+    </div>
+    </div> 
+    <button class="mt-10 button bg-black fs-s1 white " type="submit" id="submit_statics">Submit</button>
+    </form>
+    
+</body>

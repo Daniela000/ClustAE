@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClustAE - Stratifying ALS Patients</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shorthandcss@1.1.1/dist/shorthand.min.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Muli:200,300,400,500,600,700,800,900&display=swap" />
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.css" />
+    <!-- <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" /> -->
+
+    <link rel="shortcut icon" href="">
+    
+    <style> 
+        body { text-align: center;}
+        input { 
+            border: none; 
+            outline: none; 
+            padding: 5px; 
+            border-bottom: 5px solid grey; 
+        } 
+        
+        </style>
+</head>
+
+<body class="bg-black muli">
+    <!-- big text -->
+    <section class="p-10 md-py-10">
+        <div class="w-100pc md-w-70pc mx-auto py-10">
+            <h1 class="white  fs-l2 md-fs-xl1 fw-900 lh-2"> ClustAE</h1>
+            <h2 class="white"> Statifying ALS Patients</h2>
+            <h3 class="white"> Patient stratification enhances the understanding of disease heterogeneity and can support clinicians to tailor interventions to individual patients. 
+                ClustAE is deep learning-based stratification method.
+                It processes longitudinal and static data to extract patterns using an autoencoder architecture. These patterns are subsequently clustered to find the different subgroups of patients.
+                Here we made a ClustAE model pretrained on ALS data avalable for classifying the patients based on their follow-up data.</h3>
+            <br>
+                <!--<img src="assets/images/clustAE_overall.jpg" alt="Italian Trulli">-->
+        </div>
+    </section>
+
+    <!-- product options -->
+    <section class="py-l10">
+        
+        <div class="flex flex-column md-flex-row md-w-70pc mx-auto">
+            <form method = 'GET' action = "{{ url_for('select_model') }} " id = 'form_model'>
+                <input type="hidden" name="model" id="hidden_model">
+            <div class="float-left md-w-50pc">
+                <div class=" br-8 p-5 m-5 bg-indigo-lightest-10 pointer hover-scale-up-1 ease-300">
+                    <div class="indigo-lightest fw-600 fs-m1">TClustAE
+                        <span class="opacity-30">
+                        <p>Stratify Patients only based on temporal data</p>
+                        <p>ALSFRS-R questions</p>
+                        <p>Three consecutive assessments</p><br>
+                    </span> 
+                    </div>
+                    <button class="mt-10 button bg-black fs-s3 white no-underline" type="submit" name = 'model' id = 'TClustAE' value="TClustAE">Select</button>
+                </div>
+            </div>
+            <div class="float-left md-w-50pc">
+                <div class="br-8 p-5 m-5 bg-indigo-lightest-10 pointer hover-scale-up-1 ease-300">
+                    <div class="indigo-lightest fw-600 fs-m1">STClustAE
+                        <span class="opacity-30">
+                        <p>Stratify Patients based on temporal and static data</p>
+                        <p> Onset characteristics</p>
+                        <p> Threee consecutive ALSFRS-R questions </p>
+                    </span> 
+                    </div>
+                    <button class="mt-10 button bg-black fs-s3 white no-underline" type="submit" name = 'model' id = 'STClustAE' value="STClustAE">Select</button>
+                    
+                </div>
+            </div>
+        </form>
+        </div>
+    
+    </section>
+    <!--<div id="formContainer" class="form-container"></div>-->
+    <script src="../static/script_index.js"></script>
+</body>
+
+</html>

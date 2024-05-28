@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch.functional as F
 import torch
-from LSTM_AE import LSTMEncoder, LSTMDecoder
+from models.LSTM_AE import LSTMEncoder, LSTMDecoder
 torch.manual_seed(0)
 
 
@@ -37,12 +37,19 @@ class STEncoder(LSTMEncoder):
 
     def forward(self, dynamic_x, static_x):
         dynamic_x, hidden_n = super().forward(dynamic_x)
+        #static_x= static_x.unsqueeze(1)
+        #print(static_x)
+        #if static_x.shape[0] == 1: 
+            #static_x = static_x.repeat(2,1,1)
         static_x,_ = self.static_encoder_attention(static_x, static_x, static_x)
-        
+        #print(static_x.shape)
         #static_x = static_x + self.dropout(static_x)
         static_x = self.norm1(static_x)
         
         static_x= static_x.unsqueeze(1)
+        #if static_x.shape[0] == 1: 
+            #static_x = static_x.repeat(2,1,1)
+        #print(static_x.shape)
         #static_x= self.static_encoder(static_x)
         static_x = self.static_encoder(static_x.permute(0,2,1)).permute(0,1)
         #static_x = static_x + self.dropout(static_x)

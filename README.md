@@ -1,11 +1,10 @@
 # ClustAE
 
-Identifying disease progression patterns and groups of similar progressors is becoming relevant to the understanding of disease behaviours and to improving personalized treatments. Amyotrophic Lateral Sclerosis (ALS) is a neurodegenerative disease with patients manifesting heterogeneous temporal progressions. We propose a novel approach, ClustAE, to learn representations of the features in a lower dimensional space and use these representations to obtain groups of patients with similar progressions. This is achieved from an agglomerative clustering process.
+Patient stratification enhances the understanding of disease heterogeneity and can support clinicians to tailor interventions to individual patients. In this work, we propose ClustAE, a deep learning-based stratification method. ClustAE processes longitudinal and static data to extract patterns using an autoencoder architecture. These patterns are subsequently clustered to find the different subgroups of patients. As case study, we applied ClustAE to heterogeneous longitudinal data from patients with Amyotrophic Lateral Sclerosis (ALS). This approach successfully identified four groups of patients each showing distinct progressions and characteristics. The results showed that, in general, these groups improved prognostic predictions when used to train group-specific predictors, demonstrating ClustAE's potential in improving patient-specific outcome predictions.
 
 
 
-
-<img  src="ClustAE.png"/>
+<img  src="clustAE_overall.png"/>
 
 
 <!---
