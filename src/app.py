@@ -77,7 +77,7 @@ def get_static_data():
     #load model and compute the encoded reps
     model = torch.load('temp_static_turim_no_nan_val.pt')
     model.eval()
-    static_reps,dynamic_reps, _= model.encoder(torch.tensor(input_tensor), torch.tensor(static_data))
+    static_reps,dynamic_reps, _= model.encoder(input_tensor, torch.tensor(static_data))
     static_reps = static_reps.squeeze(1)
     reps = torch.cat((static_reps,dynamic_reps), dim =1)
     reps = reps.detach().numpy()
@@ -147,4 +147,4 @@ def normalize(input, model, static_data = []):
         return input, static_data     
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=8080, host='0.0.0.0')
