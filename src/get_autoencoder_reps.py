@@ -224,6 +224,7 @@ def get_encoded_reps(model, dynamic_data, static_data, type_model):
 
 def finetune_model(model, train_group, test_group):
     batch_size = 2
+    trigger_times = 0
     history = dict(train=[], val=[])
     # Validation using MSE Loss function
     loss_function = torch.nn.MSELoss()
