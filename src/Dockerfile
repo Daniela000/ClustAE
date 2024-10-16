@@ -1,16 +1,22 @@
 FROM python:3.10
 
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the requirements.txt (or other dependency files) into the image
+COPY requirements.txt requirements.txt
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the entire src folder into the /app directory in the container
+COPY src/ /app/src/
+
 # Set the working directory
-WORKDIR /src
-
-# Copy the current directory contents into the container at /src
-COPY . ./
-
-# Install the required dependencies
-RUN pip install -r src/requirements.txt
+WORKDIR /app/src
 
 # Make port 8080 available to the world outside this container
 EXPOSE 8080
 
 # Run app.py when the container launches
-CMD python src/app.py
+CMD python app.py
