@@ -8,6 +8,8 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 import preprocessing.constants as constants
 import random
+import joblib
+import os
 
 def transform_data(temp_data, static_data):
     scaler = StandardScaler()
@@ -32,6 +34,48 @@ def transform_data(temp_data, static_data):
 
     static_data = static_data[static_features].values.tolist()
     return refs, y_true, dynamic_data, static_data
+
+def transform_data_test(temp_data, static_data, type_model):
+    if type_model == 'simple':
+        scaler = joblib.load("./src/tclustae_scaler.joblib")
+    else:
+        scaler = joblib.load("./src/stclustae_temp_scaler.joblib")
+        static_scaler = joblib.load("./src/stclustae_static_scaler.joblib")
+    temp_data = temp_data.copy()
+    static_data = static_data.copy()
+    y_true = temp_data['Evolution'].values
+    refs = temp_data['Patient_ID'].values
+    temp_data.drop(['Patient_ID', 'Evolution'], axis=1, inplace = True)
+    temp_data = pd.DataFrame(scaler.transform(temp_data.values), columns = temp_data.columns)
+    dynamic_data = []
+    for idx, row in temp_data.iterrows(): 
+        time_points = []
+        for i in range(constants.MIN_APP):
+            features = [str(i) + item for item in list(constants.TEMPORAL_FEATURES.keys())]
+            time_points.append(row[features].values.tolist())
+        dynamic_data.append(time_points)
+    static_features = list(constants.STATIC_FEATURES.keys())
+
+    if static_features != [] and type_model == 'temp_static':
+        static_data =  pd.DataFrame(static_scaler.transform(static_data[static_features].values), columns = static_features)
+        #[static_features] = scaler.fit_transform(static_data[static_features])
+
+    static_data = static_data[static_features].values.tolist()
+    return refs, y_true, dynamic_data, static_data
+
+def data_to_matrix(temp_data, static_data, type_model):
+    dynamic_data = []
+    for idx, row in temp_data.iterrows(): 
+        time_points = []
+        for i in range(constants.MIN_APP):
+            features = [str(i) + item for item in list(constants.TEMPORAL_FEATURES.keys())]
+            time_points.append(row[features].values.tolist())
+        dynamic_data.append(time_points)
+    static_features = list(constants.STATIC_FEATURES.keys())
+
+    if static_features != [] and type_model == 'temp_static':
+        static_data = static_data[static_features].values.tolist()
+    return dynamic_data, static_data
 
 def generate_fsg(train_data, static_train_set):
     #create a y that is 1 if record true and 0 otherwise

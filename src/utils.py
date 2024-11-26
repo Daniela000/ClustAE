@@ -19,6 +19,7 @@ from imblearn.over_sampling import SMOTE, ADASYN, BorderlineSMOTE
 from imblearn.under_sampling import RandomUnderSampler
 import joblib
 from s_dbw import S_Dbw
+from sklearn.preprocessing import StandardScaler
 
 def parse_data(data_file, trajectory_dir, visualization_dir):
     try:
@@ -44,27 +45,36 @@ def parse_data(data_file, trajectory_dir, visualization_dir):
 
     return patients
 
+def normalize(X_train, X_test):
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+    return X_train_scaled, X_test_scaled
+
+
 def smote(X,y):
+    nY = pd.Series(y).value_counts()['Y']
+    nN = pd.Series(y).value_counts()['N']
     print('BEFORE SMOTE: ', len(X))
     counter = Counter(y)
     print(counter)
+    if nY/nN < 0.8:
+        sm = SMOTE(sampling_strategy = 0.8, k_neighbors = 4, random_state=0)
+        X, y = sm.fit_resample(X, y)
 
-    sm = sm = SMOTE(sampling_strategy = 0.8, k_neighbors = 4, random_state=0)
-    X_res, y_res = sm.fit_resample(X, y)
-
-    print('After SMOTE: ', len(X_res))
-    counter = Counter(y_res)
+    print('After SMOTE: ', len(y))
+    counter = Counter(y)
     print(counter)
 
-    return X_res, y_res
+    return X, y
 
 def random_undersample(X, y):
     nY = pd.Series(y).value_counts()['Y']
     nN = pd.Series(y).value_counts()['N']
     print("Before RU\n", pd.Series(y).value_counts())
-    #if nY/nN < 0.6:
-    rus = RandomUnderSampler(sampling_strategy = 0.6, random_state=0)
-    X, y = rus.fit_resample(X, y)
+    if nY/nN < 0.5:
+        rus = RandomUnderSampler(sampling_strategy = 0.5, random_state=0)
+        X, y = rus.fit_resample(X, y)
     return X, y
 
 def get_color_list():
@@ -199,7 +209,7 @@ def simple_trajectories(clusters, trajectory_dir):
     """
     features = ['ALSFRSb', 'ALSFRSsUL', 'ALSFRSsLL', 'R', 'ALSFRS-R', 'ALSFRSsT' , 'MITOS-stage']
     colors = get_color_list()
-    #colors_1 = [colors[1], '#A52A2A', colors[3], '#E759AC']
+    colors_1 = [colors[1], '#A52A2A', colors[3], '#E759AC']
     #print(clusters)
     #for feature in list(constants.TEMPORAL_FEATURES.keys()):
     for feature in features:
@@ -259,17 +269,17 @@ def simple_trajectories(clusters, trajectory_dir):
             app = np.arange(0,len(means))
             #num_pat = 'n = {}'.format(len(clusters[j].groupby('REF')))
             
-            ax.plot(app, means, marker = '.', color = colors[j], label = 'Cluster ' + str(j+1))
-            ax.fill_between(app, (means-ci), (means+ci), color=colors[j], alpha=.1)
+            ax.plot(app, means, marker = '.', color = colors_1[j], label = 'Cluster ' + str(j+1))
+            ax.fill_between(app, (means-ci), (means+ci), color=colors_1[j], alpha=.1)
 
         
             slope_value=[]
             for i in range(1,6):
                 v=slope(i-1,means[i-1], i, means[i])
                 slope_value.append(v)
-                plt.text( i-0.5 , (means[i] + means[i-1])/2, str(round(v,2)), fontsize=5, color = colors[j])
+                plt.text( i-0.5 , (means[i] + means[i-1])/2, str(round(v,2)), fontsize=5, color = colors_1[j])
                 
-                plt.text(i, means[i] + 0.001, str(n_samples[i-1]), fontsize=8, color = colors[j], fontweight= 'bold')
+                plt.text(i, means[i] + 0.001, str(n_samples[i-1]), fontsize=8, color = colors_1[j], fontweight= 'bold')
 
         format_mogp_axs(ax, 5, 1, y_label=[0,max_val/2,max_val], y_minmax = (0, max_val+1))
 
@@ -302,7 +312,7 @@ def classifier(x_train,x_test, y_train):
     clf = NearestCentroid()
     clf.fit(x_train, y_train)
     labels = clf.predict(x_test)
-    joblib.dump(clf, "./simple_nearest_centroids_original.joblib")
+    #joblib.dump(clf, "./simple_nearest_centroids_original.joblib")
     print('Accuracy: ', clf.score(x_train, y_train))
     
     print('Silhouette Score: ', silhouette_score(x_test, labels, metric='euclidean'))

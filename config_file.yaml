@@ -1,0 +1,31 @@
+DATA_FILE_train: "./snapshots/data_evolution_C1_180_turin.csv"
+#DATA_FILE_train: "./snapshots/new_sc_turin_no_nan_snapshots_independent.csv"
+#DATA_FILE_test: "./snapshots/new_sc_lisbon_snapshots_independent.csv"
+#DATA_FILE_test: "./snapshots/prog_rate_correct_proact_temp_data.csv" 
+DATA_FILE_test: "./snapshots/data_evolution_C1_180_lisbon.csv" 
+TOP_FOLDER: "temporal_turin_lisbon_correct_scaler_c1_180/"
+#TOP_FOLDER: 'temp_static_turim_lisbon_no_nan/'
+N_CLUST: 4
+MIN_APP: 3         
+REF_FEATURE: "REF"
+#MODEL: temp_static
+MODEL: simple
+PRETRAIN: False
+STATIC_FEATURES: {
+                  'DiagnosticDelay' : 'continuous',
+                  'Age_onset' : 'categorical',
+                  'Onset' : 'categorical',
+                  'Gender' : 'categorical',
+                  'BMI' : 'continuous', 
+                  'C9orf72' : 'categorical',
+                  'UMNvsLMN': 'categorical'
+                  }
+TEMPORAL_FEATURES: {
+                  'ALSFRSsUL':'continuous', 
+                  'ALSFRSsLL':'continuous', 
+                  'ALSFRSsT':'continuous',
+                  'ALSFRSb':'continuous', 
+                  'R':'continuous', 
+                  'ALSFRS-R':'continuous',
+                  'MITOS-stage' : 'categorical'
+                  }

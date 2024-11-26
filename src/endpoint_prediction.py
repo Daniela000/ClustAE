@@ -10,16 +10,16 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 import xgboost as xgb
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
-from sklearn.metrics import accuracy_score, roc_auc_score
-from get_autoencoder_reps import finetune_model, transform_data, get_encoded_reps
+from sklearn.metrics import accuracy_score, roc_auc_score, make_scorer
+from get_autoencoder_reps import finetune_model, transform_data, get_encoded_reps, transform_data_test
 from sklearn.svm import OneClassSVM
-from sklearn.metrics import classification_report
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 import optuna
 import math
 from sklearn.linear_model import LogisticRegression
 import joblib
+from sklearn.model_selection import GridSearchCV
 
 def string_to_list(string):
     # Remove the brackets
@@ -60,7 +60,7 @@ def esemble(X_train, y_train, X_test, y_test):
 
 
 def classifiers(X_train, y_train, X_test, y_test, outputfile):
-    table = { "Model": [], "AUC": [], "CA": [], "Sens": [], "Spec": []}
+    table = { "Model": [], "Params" : [], "AUC": [], "CA": [], "Sens": [], "Spec": []}
     #scaler = StandardScaler()    
     nY = pd.Series(y_train).value_counts()['Y']
     nN = pd.Series(y_train).value_counts()['N']
@@ -81,77 +81,88 @@ def classifiers(X_train, y_train, X_test, y_test, outputfile):
     #y_train = [x for x in y_train if str(x) != 'nan'] 
 
 
-    models = [LogisticRegression(solver = 'liblinear',class_weight='balanced',random_state = 42), KNeighborsClassifier(n_neighbors = 5), GaussianNB(), SVC(C= 100,kernel = 'rbf',random_state = 0, probability=True), RandomForestClassifier(n_estimators=30,random_state=0),xgb.XGBClassifier( eval_metric='logloss', random_state=42,use_label_encoder=False)]
-    max_auc = 0
-    clf = models[0]
-    for model in models:
-        if isinstance(model, xgb.XGBClassifier):
-            y_train = np.array(
-                list(map(lambda label: 0 if label == 'N' else 1, y_train)))
-            y_test = np.array(
-                list(map(lambda label: 0 if label == 'N' else 1, y_test)))
-            
-        #model.class_prior_ = np.array(list(class_weights.values()))    
-        model.fit(X_train, y_train)            
-        y_predicted = model.predict(X_test)
- 
-        print("Classifier: " + type(model).__name__)
-        table["Model"].append(type(model).__name__)
+    models_and_parameters = {
+        'LogisticRegression': (LogisticRegression(solver='liblinear', class_weight='balanced', random_state=42), {
+            'C': [0.01, 0.1, 1, 10]
+        }),
+        'KNeighborsClassifier': (KNeighborsClassifier(), {
+            'n_neighbors': [3, 5, 7],
+            'weights': ['uniform', 'distance']
+        }),
+        'GaussianNB': (GaussianNB(), {
+            'var_smoothing': [1e-9, 1e-8, 1e-7]
+        }),
+        'SVC': (SVC(probability=True, random_state=42), {
+            'C': [1, 10, 100],
+            'kernel': ['rbf', 'linear']
+        }),
+        'RandomForestClassifier': (RandomForestClassifier(random_state=42), {
+            'n_estimators': [10, 50, 100],
+            'max_depth': [None, 10, 20]
+        }),
+        'XGBClassifier': (xgb.XGBClassifier(eval_metric='logloss', use_label_encoder=False, random_state=42), {
+            'n_estimators': [10, 50, 100],
+            'learning_rate': [0.01, 0.1, 0.2]
+        })
+    }
 
-        try:
-            print("AUC: ", roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]))
-            table["AUC"].append( roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]))
-        except ValueError:
-            pass
+    y_train = np.array(list(map(lambda label: 0 if label == 'N' else 1, y_train)))
+    y_test = np.array(list(map(lambda label: 0 if label == 'N' else 1, y_test)))
 
+    # Custom scoring function for GridSearchCV
+    scoring = {'AUC': 'roc_auc', 'CA': make_scorer(accuracy_score)}
 
-        print("CA: ", accuracy_score(y_test, y_predicted))
-        table["CA"].append(accuracy_score(y_test, y_predicted))
+    # Grid search over each model
+    best_model = None
+    best_auc = 0
 
-        print("Sensitivity: ", sens(y_test, y_predicted))
-        table["Sens"].append(sens(y_test, y_predicted))
+    for model_name, (model, param_grid) in models_and_parameters.items():
+        grid_search = GridSearchCV(model, param_grid, scoring=scoring, refit='AUC', cv=5)
+        grid_search.fit(X_train, y_train)
         
+        best_estimator = grid_search.best_estimator_
+        y_pred = best_estimator.predict(X_test)
+        y_proba = best_estimator.predict_proba(X_test)[:, 1] if hasattr(best_estimator, "predict_proba") else None
 
-        print("Specificity: ", spec(y_test, y_predicted))
-        table["Spec"].append(spec(y_test, y_predicted))
+        auc_score = roc_auc_score(y_test, y_proba) if y_proba is not None else None
+        ca_score = accuracy_score(y_test, y_pred)
         
-        try:
-            if roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]) > max_auc:
-                clf = model
-                max_auc = roc_auc_score(y_test, model.predict_proba(X_test)[:, 1])
-        except ValueError:
-            pass
-    #pd.DataFrame(table).to_csv(constants.TRAJECTORY_DIR_train + outputfile, index=False)
-    print('***************** BEST CLF: ', type(clf).__name__)
-    print('***************** BEST CLF AUC: ', roc_auc_score(y_test, clf.predict_proba(X_test)[:, 1]))
-    return roc_auc_score(y_test, clf.predict_proba(X_test)[:, 1])
+        # Sensitivity and specificity calculations (assumes custom functions `sens` and `spec`)
+        sensitivity = sens(y_test, y_pred)
+        specificity = spec(y_test, y_pred)
+        
+        # Store results
+        table["Model"].append(model_name)
+        table["Params"].append(grid_search.best_params_)
+        table["AUC"].append(auc_score)
+        table["CA"].append(ca_score)
+        table["Sens"].append(sensitivity)
+        table["Spec"].append(specificity)
+        
+        # Track best model
+        if auc_score and auc_score > best_auc:
+            best_auc = auc_score
+            best_model = best_estimator
 
-          
+    # Convert results to a DataFrame and save
+    results_df = pd.DataFrame(table)
+    results_df.to_csv(constants.BASELINE_DIR_T_test + outputfile, index=False)
+    
+    # Print best model details
+    print('***************** BEST CLF:', type(best_model).__name__)
+    print('***************** BEST CLF AUC:', best_auc)
+    return best_auc
+
 def specialized_prediction(model, train_group, train_static, y_train, test_group, test_static, y_test,i, type_model):
     #model = finetune_model(model, train_group, test_group)
-    #predict time to NIV    
+    #predict endpoint  
     model = model.eval()
 
     X_train = get_encoded_reps(model,train_group, train_static, type_model)
     X_test = get_encoded_reps(model,test_group, test_static, type_model)
-    #X_train, y_train = smote(X_train, y_train)
-    classifiers(X_train, y_train, X_test, y_test,'spec_precition{}.csv'.format(i))
-    #auc = classifiers(X_train, y_train, X_test, y_test, 'spec_precition{}.csv'.format(i), knn, svm_p_degree,svm_g, rf_tree)
-    #return auc
-    #anomalie_detection(X_train, y_train, X_test, y_test)
-    #clf = classifiers(train_group, y_train, test_group, y_test, 'spec_precition{}.csv'.format(i))
-    #regressors(X_train, y_train, X_test, y_test, 'spec_precition{}.csv'.format(i))
+    
+    classifiers(X_train, y_train, X_test, y_test,'/spec_predition{}.csv'.format(i))
 
-def anomalie_detection(X_train, y_train, X_test, y_test):
-    y_train = np.array(list(map(lambda label: 0 if label == 'N' else 1, y_train)))
-    y_test = np.array(list(map(lambda label: 0 if label == 'N' else 1, y_test)))
-    model = IsolationForest(contamination=0.05, random_state=42)
-    model.fit(X_train)
-    y_predicted = model.predict(X_test)
-    #print("AUC: ", roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]))
-    print("CA: ", accuracy_score(y_test, y_predicted))
-    print("Sensitivity: ", sens(y_test, y_predicted))
-    print("Specificity: ", spec(y_test, y_predicted))
 """
 def objective(trial):
     #dt_cf = trial.suggest_float('dt_cf', {0.15, 0.20, 0.25, 0.30})
@@ -271,15 +282,15 @@ if __name__ == "__main__":
     n = constants.MIN_APP
     type_model = constants.MODEL
 
-    model = torch.load(type_model + '_turim.pt')
-    label_class = joblib.load("./nearest_centroids_original.joblib")
+    model = torch.load("./src/" + type_model + '_turim_no_nan_val.pt')
+    label_class = joblib.load("./src/simple_nearest_centroids_original.joblib")
     #model =model.eval()
     features = []
     for i in range(constants.MIN_APP):
             feature_time = [str(i) + item for item in list(constants.TEMPORAL_FEATURES.keys())]
             features = features + feature_time
     static_features = ['Patietn_ID'] + list(constants.STATIC_FEATURES.keys()) + ['Evolution']
-    print('*** Need for NIV 180 days prediciton ***')
+    print('*** Prognostic Prediction ***')
 
     #df_train = pd.read_csv(constants.LABELS_DIR_train + '/labels.csv')
     #df_train.replace(" ", np.nan, inplace=True)   
@@ -290,11 +301,12 @@ if __name__ == "__main__":
 
     temp_data =  pd.read_csv(constants.BASELINE_DIR_T_train + '{}TPS_baseline_temporal.csv'.format(n))
     static_data =  pd.read_csv(constants.BASELINE_DIR_S_train + '{}TPS_baseline_static.csv'.format(n))
-    train_refs, y_train, dynamic_train_set, static_train_set = transform_data(temp_data[['Patient_ID'] + features + ['Evolution']],static_data)
+    train_refs, y_train, dynamic_train_set, static_train_set = transform_data_test(temp_data[['Patient_ID'] + features + ['Evolution']],static_data, type_model)
     train_reps = get_encoded_reps(model, dynamic_train_set, static_train_set, type_model)
     train_labels = label_class.predict(train_reps)
+    #print(len(train_labels))
     temp_data['Labels'] = train_labels
-    static_data['Labels'] = train_labels
+    static_data['Labels'] = np.empty(len(static_data))
     #df_train = pd.DataFrame({'Patient_ID': temp_data['Patient_ID'].values, 'Labels': train_labels, 'Evolution': temp_data['Evolution'].values })
 
 
@@ -310,11 +322,11 @@ if __name__ == "__main__":
     val_temp_data =  pd.read_csv(constants.BASELINE_DIR_T_test + '{}TPS_baseline_temporal.csv'.format(n))
     #val_temp_data = pd.merge(val_temp_data ,df_test, on = ['Patient_ID', 'Evolution'], how='inner')  
     val_static_data =  pd.read_csv(constants.BASELINE_DIR_S_test + '{}TPS_baseline_static.csv'.format(n))
-    val_refs, y_test, dynamic_val_set, static_val_set = transform_data(val_temp_data[['Patient_ID'] + features + ['Evolution']],val_static_data)
+    val_refs, y_test, dynamic_val_set, static_val_set = transform_data_test(val_temp_data[['Patient_ID'] + features + ['Evolution']],val_static_data, type_model)
     test_reps = get_encoded_reps(model, dynamic_val_set, static_val_set, type_model)
     test_labels = label_class.predict(test_reps)
     val_temp_data['Labels'] = test_labels
-    val_static_data['Labels'] = test_labels
+    val_static_data['Labels'] = np.empty(len(val_static_data))
     #df_test = pd.DataFrame({'Patient_ID': val_temp_data['Patient_ID'].values, 'Labels': test_labels, 'Evolution': val_temp_data['Evolution'].values})
     #dynamic_val_set = get_encoded_reps(model,dynamic_val_set, [], 'simple')
 
@@ -327,7 +339,7 @@ if __name__ == "__main__":
     #dynamic_train_set = get_encoded_reps(model,dynamic_train_set, [], 'simple')
 
        
-    classifiers(train_reps, y_train, test_reps, y_test,'no_strat_pred_overall.csv')
+    classifiers(train_reps, y_train, test_reps, y_test,'/no_strat_pred_overall.csv')
     #classifiers(train_data[features].values, train_data['Evolution'].values, val_temp_data[features].values, val_temp_data['Evolution'].values,'no_strat_pred_overall.csv')
     #classifiers(list(map(string_to_list, df_train['Reps'].values)), df_train['Evolution'].values, list(map(string_to_list, df_test['Reps'].values)), y_test, 'no_strat_pred_overall.csv')
     #anomalie_detection(list(map(string_to_list, df_train['Reps'].values)), df_train['Evolution'].values, list(map(string_to_list, df_test['Reps'].values)), y_test)
@@ -344,14 +356,14 @@ if __name__ == "__main__":
         train_clusters_static.append(static_data.loc[static_data['Labels'] == i])
         test_clusters.append(val_temp_data.loc[val_temp_data['Labels'] == i])
         test_clusters_static.append(val_static_data.loc[val_static_data['Labels'] == i])
-        val_refs, y_test, dynamic_val_set, static_val_set = transform_data(test_clusters[i][['Patient_ID'] + features + ['Evolution']],test_clusters_static[i])
+        val_refs, y_test, dynamic_val_set, static_val_set = transform_data_test(test_clusters[i][['Patient_ID'] + features + ['Evolution']],test_clusters_static[i], type_model)
 
         #dynamic_train_set = get_encoded_reps(model,dynamic_train_set, [], 'simple')
         #classifiers(train_data[features].values, train_data['Evolution'].values, test_clusters[i][features].values, test_clusters[i]['Evolution'].values,'no_strat_pred_{}.csv'.format(i))
         #dynamic_val_set = get_encoded_reps(model,dynamic_val_set, [], 'simple')
         #dynamic_train_set = get_encoded_reps(model,dynamic_train_set, [], 'simple')
         dynamic_val_set = get_encoded_reps(model,dynamic_val_set, static_val_set, type_model)
-        classifiers(train_reps, y_train, dynamic_val_set, y_test, 'no_strat_pred_{}.csv'.format(i))
+        classifiers(train_reps, y_train, dynamic_val_set, y_test, '/no_strat_pred_{}.csv'.format(i))
         #esemble(dynamic_train_set, y_train, dynamic_val_set, y_test)
         #print(test_clusters[i]['Evolution'].values)
         #print(y_train)
@@ -370,7 +382,7 @@ if __name__ == "__main__":
         #smote_train_data[features],smote_train_data['Evolution'] = smote(train_clusters[i][features], train_clusters[i]['Evolution'])
         #smote_train_data[features],smote_train_data['Evolution'] = random_undersample(smote_train_data[features],smote_train_data['Evolution'])
         #smote_train_data.dropna(subset = features, inplace = True)
-        train_refs, y_train, dynamic_train_set, static_train_set = transform_data(smote_train_data,train_clusters_static[i])
+        train_refs, y_train, dynamic_train_set, static_train_set = transform_data_test(smote_train_data,train_clusters_static[i], type_model)
 
         #train_data[features], train_data['Evolution'] = smote(train_data[features], train_data['Evolution'])
 
@@ -389,7 +401,7 @@ if __name__ == "__main__":
         
         #test_data = pd.merge(val_temp_data,test_clusters[i][['Patient_ID']], on = 'Patient_ID', how='inner')
         #static_test_data = pd.merge(val_static_data ,test_clusters[i][['Patient_ID']], on = 'Patient_ID', how='inner')
-        val_refs, y_test, dynamic_val_set, static_val_set = transform_data(test_clusters[i][['Patient_ID'] + features + ['Evolution']],test_clusters_static[i])
+        val_refs, y_test, dynamic_val_set, static_val_set = transform_data_test(test_clusters[i][['Patient_ID'] + features + ['Evolution']],test_clusters_static[i], type_model)
         #dynamic_val_set= list(map(string_to_list, test_clusters[i]['Reps'].values))
         #y_test = test_clusters[i]['Evolution'].values
         
