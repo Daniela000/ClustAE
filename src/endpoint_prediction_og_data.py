@@ -64,6 +64,7 @@ def warm_start_classifiers(X_train, y_train, sp_X_train, sp_y_train, X_test, y_t
     }
 
     y_train = np.array(list(map(lambda label: 0 if label == 'N' else 1, y_train)))
+    sp_y_train = np.array(list(map(lambda label: 0 if label == 'N' else 1, sp_y_train)))
     y_test = np.array(list(map(lambda label: 0 if label == 'N' else 1, y_test)))
 
     # Custom scoring function for GridSearchCV
