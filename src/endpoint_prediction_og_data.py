@@ -57,12 +57,9 @@ def warm_start_classifiers(X_train, y_train, sp_X_train, sp_y_train, X_test, y_t
             'learning_rate': [0.01, 0.1, 0.2]
         }),
         'CatBoostClassifier': (CatBoostClassifier(logging_level = 'Silent',random_state=42), {
-            'depth': [2,4,5,6,8,10],
+            'depth': [2,5,10],
             'learning_rate': [0.01, 0.1, 0.2],
-            'iterations' : [10,20,50,100],
-            'l2_leaf_reg': [1,2,3,4,5,10],
-    	    'bagging_temperature': [0,0.01, 0.05,1],
-            'random_strength': [0,0.01, 0.05,1]})
+    	    'bagging_temperature': [0,0.01, 0.05,1]})
 
     }
 
@@ -156,12 +153,9 @@ def classifiers(X_train, y_train, X_test, y_test, outputfile):
             'learning_rate': [0.01, 0.1, 0.2]
         }),
         'CatBoostClassifier': (CatBoostClassifier(logging_level = 'Silent',random_state=42), {
-            'depth': [2,4,5,6,8,10],
+            'depth': [2,5,10],
             'learning_rate': [0.01, 0.1, 0.2],
-            'iterations' : [10,20,50,100],
-            'l2_leaf_reg': [1,2,3,4,5,10],
-    	    'bagging_temperature': [0,0.01, 0.05,1],
-            'random_strength': [0,0.01, 0.05,1]})
+    	    'bagging_temperature': [0,0.01, 0.05,1]})
     }
 
     y_train = np.array(list(map(lambda label: 0 if label == 'N' else 1, y_train)))
