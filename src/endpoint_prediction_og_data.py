@@ -55,11 +55,11 @@ def warm_start_classifiers(X_train, y_train, sp_X_train, sp_y_train, X_test, y_t
         'XGBClassifier': (xgb.XGBClassifier(eval_metric='logloss', use_label_encoder=False, random_state=42), {
             'n_estimators': [10, 50, 100],
             'learning_rate': [0.01, 0.1, 0.2]
-        }),
-        'CatBoostClassifier': (CatBoostClassifier(logging_level = 'Silent',random_state=42), {
-            'depth': [2,5,10],
-            'learning_rate': [0.01, 0.1, 0.2],
-    	    'bagging_temperature': [0,0.01, 0.05,1]})
+        })
+        #'CatBoostClassifier': (CatBoostClassifier(logging_level = 'Silent',random_state=42), {
+        #    'depth': [2,5,10],
+        #    'learning_rate': [0.01, 0.1, 0.2],
+    	#    'bagging_temperature': [0,0.01, 0.05,1]})
 
     }
 
@@ -152,11 +152,11 @@ def classifiers(X_train, y_train, X_test, y_test, outputfile):
         'XGBClassifier': (xgb.XGBClassifier(eval_metric='logloss', use_label_encoder=False, random_state=42), {
             'n_estimators': [10, 50, 100],
             'learning_rate': [0.01, 0.1, 0.2]
-        }),
-        'CatBoostClassifier': (CatBoostClassifier(logging_level = 'Silent',random_state=42), {
-            'depth': [2,5,10],
-            'learning_rate': [0.01, 0.1, 0.2],
-    	    'bagging_temperature': [0,0.01, 0.05,1]})
+        })
+        #'CatBoostClassifier': (CatBoostClassifier(logging_level = 'Silent',random_state=42), {
+        #    'depth': [2,5,10],
+        #    'learning_rate': [0.01, 0.1, 0.2],
+    	#    'bagging_temperature': [0,0.01, 0.05,1]})
     }
 
     y_train = np.array(list(map(lambda label: 0 if label == 'N' else 1, y_train)))
