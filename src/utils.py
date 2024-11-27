@@ -58,8 +58,8 @@ def smote(X,y):
     print('BEFORE SMOTE: ', len(X))
     counter = Counter(y)
     print(counter)
-    if nY/nN < 0.8:
-        sm = SMOTE(sampling_strategy = 0.8, k_neighbors = 4, random_state=0)
+    if nY/nN < 1:
+        sm = SMOTE(sampling_strategy = 1, k_neighbors = 4, random_state=0)
         X, y = sm.fit_resample(X, y)
 
     print('After SMOTE: ', len(y))
@@ -72,8 +72,8 @@ def random_undersample(X, y):
     nY = pd.Series(y).value_counts()['Y']
     nN = pd.Series(y).value_counts()['N']
     print("Before RU\n", pd.Series(y).value_counts())
-    if nY/nN < 0.5:
-        rus = RandomUnderSampler(sampling_strategy = 0.5, random_state=0)
+    if nY/nN < 2/3:
+        rus = RandomUnderSampler(sampling_strategy = 2/3, random_state=0)
         X, y = rus.fit_resample(X, y)
     return X, y
 

@@ -34,11 +34,14 @@ def warm_start_classifiers(X_train, y_train, sp_X_train, sp_y_train, X_test, y_t
     print("Specialized train \n", pd.Series(sp_y_train).value_counts())
 
 
-    #X_train, y_train = random_undersample(X_train, y_train)
-    #X_train, y_train= smote(X_train, y_train)
-    resample = SMOTEENN(smote=SMOTE(k_neighbors=2), random_state = 42)
-    X_train, y_train = resample.fit_resample(X_train, y_train)
-    sp_X_train, sp_y_train = resample.fit_resample(sp_X_train, sp_y_train)
+    X_train, y_train = random_undersample(X_train, y_train)
+    X_train, y_train= smote(X_train, y_train)
+
+    sp_X_train, sp_y_train = random_undersample(sp_X_train, sp_y_train)
+    sp_X_train, sp_y_train= smote(sp_X_train, sp_y_train)
+    #resample = SMOTEENN(smote=SMOTE(k_neighbors=2), random_state = 42)
+    #X_train, y_train = resample.fit_resample(X_train, y_train)
+    #sp_X_train, sp_y_train = resample.fit_resample(sp_X_train, sp_y_train)
 
     print("Train after resampling\n", pd.Series(y_train).value_counts())
     print("Specialized Train after resampling\n", pd.Series(sp_y_train).value_counts())
