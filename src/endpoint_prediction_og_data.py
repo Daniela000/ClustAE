@@ -125,10 +125,10 @@ def classifiers(X_train, y_train, X_test, y_test, outputfile):
     print("Train\n", pd.Series(y_train).value_counts())
     print("Test\n", pd.Series(y_test).value_counts())
 
-    #X_train, y_train = random_undersample(X_train, y_train)
-    #X_train, y_train= smote(X_train, y_train)
-    resample = SMOTEENN(smote=SMOTE(k_neighbors=2), random_state = 42)
-    X_train, y_train = resample.fit_resample(X_train, y_train)
+    X_train, y_train = random_undersample(X_train, y_train)
+    X_train, y_train= smote(X_train, y_train)
+    #resample = SMOTEENN(smote=SMOTE(k_neighbors=2), random_state = 42)
+    #X_train, y_train = resample.fit_resample(X_train, y_train)
 
     print("Train after resampling\n", pd.Series(y_train).value_counts())
 
