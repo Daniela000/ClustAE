@@ -11,8 +11,9 @@ import numpy as np
 def load_data_baselines(features):
     train_infile = constants.DATA_FILE_train
     test_infile  = constants.DATA_FILE_test
-    test_data = pd.read_csv(test_infile, low_memory=False)
-    train_data = pd.read_csv(train_infile, low_memory=False)
+
+    test_data = pd.read_csv(test_infile)
+    train_data = pd.read_csv(train_infile)
 
     train_data.replace(" ", np.nan, inplace=True)
     test_data.replace(" ", np.nan, inplace=True)

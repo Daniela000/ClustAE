@@ -3,7 +3,7 @@ import pandas as pd
 import subprocess
 import preprocessing.constants as constants
 import sys
-from get_autoencoder_reps import train, transform_data, get_encoded_reps
+from get_autoencoder_reps import train, transform_data, get_encoded_reps, transform_data_test
 from sklearn.model_selection import train_test_split
 import torch
 from pathlib import Path
@@ -20,8 +20,7 @@ if __name__ == "__main__":
     cmd = "python3 src/preprocessing/longitudinal_tables_strat.py {} {}".format(n, sys.argv[1]) 
     print(cmd)
     subprocess.call(cmd, shell=True)
-    
-    
+
     temp_data =  pd.read_csv(constants.BASELINE_DIR_T_train + '{}TPS_baseline_temporal.csv'.format(n))
     static_data =  pd.read_csv(constants.BASELINE_DIR_S_train + '{}TPS_baseline_static.csv'.format(n))
     if type_model == 'temp_static':
@@ -35,7 +34,7 @@ if __name__ == "__main__":
     if type_model == 'temp_static':
         val_temp_data = val_temp_data[val_temp_data['Patient_ID'].isin(val_static_data['Patient_ID'])]
         val_temp_data.to_csv(constants.BASELINE_DIR_T_test + '{}TPS_baseline_temporal.csv'.format(n))
-    val_refs, y_test, dynamic_val_set, static_val_set = transform_data(val_temp_data,val_static_data)
+    val_refs, y_test, dynamic_val_set, static_val_set = transform_data_test(val_temp_data,val_static_data, type_model)
 
     #dynamic_train_set, dynamic_val_set, static_train_set, static_val_set, y_train,y_test,train_refs,val_refs = train_test_split(dynamic_data,static_data, y_true,refs, test_size=0.1,random_state = 42,stratify = y_true)
     if not pretrain:
@@ -119,4 +118,3 @@ if __name__ == "__main__":
     all_traj_path = constants.TOP_FOLDER + "turim_lisbon_traj/"
     Path(all_traj_path).mkdir(parents=True, exist_ok=True)
     simple_trajectories(clusters, all_traj_path)
-    
